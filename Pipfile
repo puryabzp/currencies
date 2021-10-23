@@ -8,6 +8,7 @@ celery = "*"
 redis = "*"
 requests = "*"
 beautifulsoup4 = "*"
+websocket-client = "*"
 
 [dev-packages]
 

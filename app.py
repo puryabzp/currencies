@@ -1,15 +1,14 @@
 from __future__ import absolute_import, unicode_literals
 from celery import Celery
+from websocket import create_connection
 import requests
-
+import json
 
 """This module Provides A simple celery app that get All currencies And return a Customize dictionary for each currency
    For Run app
    First Install Dependenices
-   Then, run celery beat :
-        celery -A app beat
-   Finally:
-        celery -A app worker -l INFO     
+   Then:
+        celery -A app worker -l INFO -B  (on linux)   
 """
 
 
@@ -48,7 +47,7 @@ api = 'http://api.coincap.io/v2/assets'
 api_key = 'da914918-5ed5-4be9-aad3-4df4263b5c8b'
 params = {'KEY':api_key}
 
-
+ws = create_connection("your ws address")
 
 @app.task
 def collector():
@@ -57,8 +56,10 @@ def collector():
 
     result = requests.get(api,params=params)
     currencies = result.json()['data']
-    return [{"name":i['id'],"symbol":i['symbol'],
+    final_data = json.dumps({'data':[{"name":i['id'],"symbol":i['symbol'],
         "circulatingSupply":i["supply"],"maxSupply":i["maxSupply"],
         "totalSupply":i["maxSupply"],"volume":i["volumeUsd24Hr"],
-        "rank":i["rank"],"marketCap":i["marketCapUsd"],"price":i["priceUsd"]} for i in currencies]  
+        "rank":i["rank"],"marketCap":i["marketCapUsd"],"price":i["priceUsd"]} for i in currencies]})
+    ws.send(final_data)
+    
 
